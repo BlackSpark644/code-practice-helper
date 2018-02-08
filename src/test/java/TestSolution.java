@@ -1,4 +1,6 @@
-
+/**
+ * These are the solutions to a practice set I sent out to my students.
+ */
 public class TestSolution {
     /**
      * Solves the train problem using relative speed.
@@ -36,4 +38,3 @@ public class TestSolution {
     }
 
 }
-/* */

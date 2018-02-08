@@ -1,5 +1,8 @@
 import junit.framework.TestCase;
 import pw.jonak.practicehelper.MethodTest;
+import pw.jonak.practicehelper.testresult.Result;
+import pw.jonak.practicehelper.testresult.Success;
+
 import static pw.jonak.practicehelper.MethodTest.parameters;
 import static pw.jonak.practicehelper.MethodTest.parameterSet;
 
@@ -20,7 +23,7 @@ public class Test extends TestCase {
     @Override
     protected void setUp() throws Exception {
         mt = new MethodTest(
-                TestSolution.class,
+                MethodsAndParameterPassingPractice.class, // Student class
                 TestSolution.class,
                 TestSolution.class.getDeclaredMethod("solveTrainProblem", double.class, double.class, double.class),
                 parameterSet (
@@ -33,6 +36,9 @@ public class Test extends TestCase {
     }
 
     public void testOne() {
-        System.out.println(mt.runAllTestsThenEnd());
+        for(Result r : mt.runAllTestsThenEnd()) {
+            System.out.println(r);
+            assertTrue(r instanceof Success);
+        }
     }
 }

@@ -27,6 +27,10 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
+compileJava {
+    options.encoding = "UTF-8"
+}
+
 artifacts {
     archives sourcesJar
     archives javadocJar
