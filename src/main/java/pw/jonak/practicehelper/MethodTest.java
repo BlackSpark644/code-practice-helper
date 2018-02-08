@@ -209,7 +209,7 @@ public class MethodTest {
                 retVal = testExec.get(METHOD_TIMEOUT, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 System.out.println("method canceled!");
-                return new Failure(methodName);
+                return new Error(methodName);
             } catch (ExecutionException e) {
                 if (e.getCause().getClass() == InvocationTargetException.class) {
                     System.out.println("The method threw this exception:");

@@ -37,7 +37,7 @@ public class Failure extends Result {
             StringBuilder composition = new StringBuilder("(");
             for (int i = 0; i < givenParameters.length; i++) {
                 composition.append(givenParameters[i].toString());
-                if(i != givenParameters.length + 1) {
+                if(i != givenParameters.length - 1) {
                     composition.append(", ");
                 }
             }
@@ -63,7 +63,7 @@ public class Failure extends Result {
                 StringBuilder composition = new StringBuilder("(");
                 for (int i = 0; i < givenParameters.length; i++) {
                     composition.append(givenParameters[i].toString());
-                    if(i != givenParameters.length + 1) {
+                    if(i != givenParameters.length - 1) {
                         composition.append(", ");
                     }
                 }
@@ -116,14 +116,14 @@ public class Failure extends Result {
                 StringBuilder expectedTypesString = new StringBuilder();
                 for(int i = 0; i < expectedParameterTypes.length; i++) {
                     expectedTypesString.append(expectedParameterTypes[i].getSimpleName());
-                    if(i != expectedParameterTypes.length + 1) {
+                    if(i != expectedParameterTypes.length - 1) {
                         expectedTypesString.append(", ");
                     }
                 }
                 StringBuilder actualTypesString = new StringBuilder();
                 for(int i = 0; i < actualParameterTypes.length; i++) {
                     actualTypesString.append(actualParameterTypes[i].getSimpleName());
-                    if(i != actualParameterTypes.length + 1) {
+                    if(i != actualParameterTypes.length - 1) {
                         actualTypesString.append(", ");
                     }
                 }

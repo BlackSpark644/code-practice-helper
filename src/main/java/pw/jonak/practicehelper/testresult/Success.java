@@ -45,7 +45,7 @@ public class Success extends Result {
             StringBuilder composition = new StringBuilder("(");
             for (int i = 0; i < givenParameters.length; i++) {
                 composition.append(givenParameters[i].toString());
-                if(i != givenParameters.length + 1) {
+                if(i != givenParameters.length - 1) {
                     composition.append(", ");
                 }
             }
