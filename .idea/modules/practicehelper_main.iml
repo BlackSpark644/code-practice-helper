@@ -9,5 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Gradle: com.diogonunes:JCDP:2.0.3.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.fusesource.jansi:jansi:1.15" level="project" />
   </component>
 </module>
