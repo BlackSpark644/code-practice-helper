@@ -109,7 +109,7 @@ public class MethodTest {
         this.specificCases = specificCases;
         this.testCaseGenerator = generator;
         this.numGenerationRounds = generationRounds;
-        if (specificCases != null) {
+        if (specificCases != null) { // Validate each specific case
             for (Object[] test : specificCases) {
                 if (!validateTestCase(test)) {
                     throw new IllegalArgumentException("Your test cases are incompatible with the method you're testing!");
@@ -117,7 +117,10 @@ public class MethodTest {
             }
         }
 
-        ensureAccess();
+        if(containsMethod()) {
+            ensureAccess(getMethod());
+        }
+        ensureAccess(solution);
 
         this.executor = Executors.newFixedThreadPool(16);
     }
@@ -137,7 +140,7 @@ public class MethodTest {
         Result methodResult = testMethodHeader();
         retVal.add(methodResult);
 
-        if(methodResult instanceof Success) {
+        if (methodResult instanceof Success) {
             retVal.addAll(runTestCases());
         }
         end();
@@ -154,7 +157,7 @@ public class MethodTest {
         if (!containsMethod()) {
             return new Failure.HeaderFailure.MethodNotFoundFailure(methodName);
         }
-        Method m = getMethod();
+        Method m = getMethod();  // Non-null; if it were null, the above section would have terminated the method.
         if (!validateParameterTypes(m)) {
             return new Failure.HeaderFailure.WrongParameterTypeFailure(methodName, targetParameterTypes, m.getParameterTypes());
         }
@@ -169,14 +172,14 @@ public class MethodTest {
      */
     public ArrayList<Result> runTestCases() {
         ArrayList<Result> results = new ArrayList<>();
-        if(specificCases != null) {
-            for(Object[] test : specificCases) {
+        if (specificCases != null) {
+            for (Object[] test : specificCases) {
                 results.add(runTestCase(test));
             }
         }
-        for(int i = 0; i < numGenerationRounds; i++) {
+        for (int i = 0; i < numGenerationRounds; i++) {
             Object[] test = testCaseGenerator.generate();
-            if(validateTestCase(test)) {
+            if (validateTestCase(test)) {
                 results.add(runTestCase(test));
             } else {
                 throw new IllegalArgumentException("Your generator method is incompatible with the method you're testing!");
@@ -191,74 +194,54 @@ public class MethodTest {
      * @param test The parameters to test against.
      */
     private Result runTestCase(Object[] test) {
-        try {
-            Future<Object> testExec = executor.submit(() -> getMethod().invoke(type.newInstance(), test));
-            Future<Object> solutionExec = executor.submit(() -> solution.invoke(type.newInstance(), test));
-            Object retVal;
-            Object solutionOutput;
+        Future<Object> testExec = executor.submit(() -> getMethod().invoke(type.newInstance(), test));
+        Future<Object> solutionExec = executor.submit(() -> solution.invoke(type.newInstance(), test));
+        Object retVal;
+        Object solutionOutput;
 
-            try {
-                solutionOutput = solutionExec.get(METHOD_TIMEOUT, TimeUnit.SECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                System.err.println("Error in solution!");
-                e.printStackTrace();
-                return new Error(methodName);
-            }
-
-            try {
-                retVal = testExec.get(METHOD_TIMEOUT, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                System.out.println("method canceled!");
-                return new Error(methodName);
-            } catch (ExecutionException e) {
-                if (e.getCause().getClass() == InvocationTargetException.class) {
-                    System.out.println("The method threw this exception:");
-                    e.getCause().printStackTrace();
-                    return new Failure.TestCaseFailure(methodName, test, solutionOutput, null);
-                } else {
-                    e.printStackTrace();
-                }
-                return new Failure(methodName);
-            } catch (TimeoutException e) {
-                return new Failure.TestCaseFailure.InfiniteLoopFailure(methodName, test, solutionOutput);
-            }
-
-            if (targetReturnType != void.class && retVal != null && !retVal.equals(solutionOutput)) {
-                String targetString = solutionOutput == null ? "null" : solutionOutput.toString();
-                return new Failure.TestCaseFailure(methodName, test, solutionOutput, retVal);
-            } else {
-                String outputString = retVal == null ? "null" : retVal.toString();
-                String targetString = solutionOutput == null ? "null" : solutionOutput.toString();
-                return new Success.TestCaseSuccess(methodName, test, retVal);
-            }
-        } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
+        try {  // Resolve solution execution
+            solutionOutput = solutionExec.get(METHOD_TIMEOUT, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            System.err.println("Error in solution!");
             e.printStackTrace();
             return new Error(methodName);
+        }
+
+        try {  // Resolve student's method execution
+            retVal = testExec.get(METHOD_TIMEOUT, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {  // Happens when end() is called before the method resolves, I think TODO: Verify
+            e.printStackTrace();
+            return new Error(methodName);
+        } catch (ExecutionException e) {  // Happens when there's an exception inside the executor submission.
+            if (e.getCause().getClass() == InvocationTargetException.class) {  // True if the student's method threw an exception
+                System.out.println("The method threw this exception:");
+                e.getCause().printStackTrace();
+                return new Failure.TestCaseFailure(methodName, test, solutionOutput, null);
+            } else {  // Otherwise, something else inside the submission failed -- like the invoke method.
+                e.printStackTrace();
+                return new Failure(methodName);
+            }
+        } catch (TimeoutException e) {  // Happens when the method times out (see constant METHOD_TIMEOUT)
+            return new Failure.TestCaseFailure.InfiniteLoopFailure(methodName, test, solutionOutput);
+        }
+
+        // Makes sure a failure is not emitted for a void method.
+        if (targetReturnType != void.class && retVal != null && !retVal.equals(solutionOutput)) {
+            return new Failure.TestCaseFailure(methodName, test, solutionOutput, retVal);
+        } else {
+            return new Success.TestCaseSuccess(methodName, test, retVal);
         }
     }
 
     /**
      * Ensures that the tester has access to the methods.
      */
-    private void ensureAccess() {
-        if(containsMethod()) {
-            Method m = getMethod();
-            if (!Modifier.isPublic(m.getModifiers())) {
-                try {
-                    m.setAccessible(true);
-                } catch (SecurityException e) {
-                    System.out.println("\"" + methodName + "\" needs to be public!");
-                }
-            }
-        }
-        if(solution != null) {
-            if(!Modifier.isPublic(solution.getModifiers())) {
-                try {
-                    solution.setAccessible(true);
-                } catch (SecurityException e) {
-                    System.out.println("Error: the solution needs to be public!");
-                }
+    private void ensureAccess(Method m) {
+        if (!Modifier.isPublic(m.getModifiers())) {
+            try {
+                m.setAccessible(true);
+            } catch (SecurityException e) {
+                System.out.println("\"" + methodName + "\" needs to be public!");
             }
         }
     }
@@ -300,7 +283,7 @@ public class MethodTest {
      * @return The associated Method object, or null if not found.
      */
     private Method getMethod() {
-        if(cachedMethod == null) {
+        if (cachedMethod == null) {
             for (Method m : methods) {
                 if (m.getName().equals(methodName) &&
                         (cachedMethod == null || validateParameterTypes(m))) {
@@ -324,7 +307,7 @@ public class MethodTest {
         }
         for (int i = 0; i < targetParameterTypes.length; i++) {
             if (testParameters[i] != null && !checkBoxedPrimitives(testParameters[i], targetParameterTypes[i]) && testParameters[i].getClass() != targetParameterTypes[i]) {
-                return false; // TODO: Check for @NotNullable
+                return false; // TODO: Check for @NotNullable and other annotations
             }
         }
         return true;
@@ -353,6 +336,7 @@ public class MethodTest {
     /**
      * Syntactic sugar for creating an array of Object arrays for creating
      * sets of parameters for creating edge cases/etc.
+     *
      * @param parameterArrays The arrays representing parameters to pass in.
      * @return An Object[][] good for passing into the MethodTest constructor.
      */
@@ -362,6 +346,7 @@ public class MethodTest {
 
     /**
      * Syntactic sugar for creating an Object array for parameter passing.
+     *
      * @param parameters The parameters to put in the array.
      * @return An Object array good for passing into MethodTest methods.
      */
