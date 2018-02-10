@@ -18,11 +18,11 @@ public class TestSolution {
     }
 
     private static int collatzCount(int input) {
-        if(input < 1) {
+        if (input < 1) {
             return -1;
         }
         int count = 0;
-        while(input > 1) {
+        while (input > 1) {
             count++;
             input = collatzIncrement(input);
         }
