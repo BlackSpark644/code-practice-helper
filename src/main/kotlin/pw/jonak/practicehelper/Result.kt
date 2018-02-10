@@ -1,4 +1,6 @@
-package pw.jonak.methodtest
+@file:Suppress("RedundantVisibilityModifier")
+
+package pw.jonak.practicehelper
 
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
@@ -8,7 +10,7 @@ import kotlin.reflect.jvm.jvmErasure
  * Represents a [Result] emitted from a [MethodTest].
  * @property methodName The name of the method that was being tested.
  */
-open class Result protected constructor(val methodName: String)
+public open class Result protected constructor(public val methodName: String)
 
 
 // === SUCCESS BRANCH ===
@@ -18,7 +20,7 @@ open class Result protected constructor(val methodName: String)
  * Represents a general success and is the start of
  * a branch of other more specific successes.
  */
-open class Success(methodName: String) : Result(methodName) {
+public open class Success(methodName: String) : Result(methodName) {
     override fun toString(): String {
         return "<$methodName> had a general success!"
     }
@@ -27,7 +29,7 @@ open class Success(methodName: String) : Result(methodName) {
 /**
  * Represents a well-formed header.
  */
-class HeaderSuccess(methodName: String) : Success(methodName) {
+public class HeaderSuccess(methodName: String) : Success(methodName) {
     override fun toString(): String {
         return "The header for <$methodName> looks good!"
     }
@@ -38,7 +40,7 @@ class HeaderSuccess(methodName: String) : Success(methodName) {
  * @property givenParameters The parameters passed into the method.
  * @property output The (correct) output.
  */
-class TestCaseSuccess(methodName: String, val givenParameters: Array<out Any?>, val output: Any?) :
+public class TestCaseSuccess(methodName: String, public val givenParameters: Array<out Any?>, public val output: Any?) :
     Success(methodName) {
     override fun toString(): String {
         return "Success! <$methodName(${givenParameters.joinToString(", ")})> returned <$output>,"
@@ -53,7 +55,7 @@ class TestCaseSuccess(methodName: String, val givenParameters: Array<out Any?>, 
  * Represents a general failure and is the start
  * of a branch of other more specific failures.
  */
-open class Failure(methodName: String) : Result(methodName) {
+public open class Failure(methodName: String) : Result(methodName) {
     override fun toString(): String {
         return "Failure! <$methodName> had a general failure."
     }
@@ -62,12 +64,12 @@ open class Failure(methodName: String) : Result(methodName) {
 /**
  * Represents a malformed method header/prototype.
  */
-open class HeaderFailure protected constructor(methodName: String) : Failure(methodName)
+public open class HeaderFailure protected constructor(methodName: String) : Failure(methodName)
 
 /**
  * Represents a method that just isn't even there...
  */
-class MethodNotFoundFailure(methodName: String) : HeaderFailure(methodName) {
+public class MethodNotFoundFailure(methodName: String) : HeaderFailure(methodName) {
     override fun toString(): String {
         return "Failure! The method <$methodName> couldn't be found..."
     }
@@ -78,10 +80,10 @@ class MethodNotFoundFailure(methodName: String) : HeaderFailure(methodName) {
  * @property expectedParameterTypes The correct parameter types.
  * @property actualparameterTypes The parameter types in the student method.
  */
-class WrongParametersFailure(
+public class WrongParametersFailure(
     methodName: String,
-    val expectedParameterTypes: Array<KParameter>,
-    val actualparameterTypes: Array<KParameter>
+    public val expectedParameterTypes: Array<KParameter>,
+    public val actualparameterTypes: Array<KParameter>
 ) : HeaderFailure(methodName) {
     override fun toString(): String {
         return "Failure! <$methodName> should have the parameter types <(${expectedParameterTypes.map { it.type.jvmErasure.simpleName }.joinToString(
@@ -95,10 +97,10 @@ class WrongParametersFailure(
  * @property expectedReturnType The correct return type.
  * @property actualReturnType The return type in the student method.
  */
-class WrongReturnTypeFailure(
+public class WrongReturnTypeFailure(
     methodName: String,
-    val expectedReturnType: KType?,
-    val actualReturnType: KType?
+    public val expectedReturnType: KType?,
+    public val actualReturnType: KType?
 ) : HeaderFailure(methodName) {
     override fun toString(): String {
         return "Failure! <$methodName> should have return type <${expectedReturnType?.jvmErasure?.simpleName
@@ -109,7 +111,7 @@ class WrongReturnTypeFailure(
 /**
  * Represents a header that was unable to be made accessible.
  */
-class MethodSecurityFailure(methodName: String) : HeaderFailure(methodName) {
+public class MethodSecurityFailure(methodName: String) : HeaderFailure(methodName) {
     override fun toString(): String {
         return "Failure! <$methodName> should have public visibility."
     }
@@ -121,11 +123,11 @@ class MethodSecurityFailure(methodName: String) : HeaderFailure(methodName) {
  * @property expectedResult The result that was expected.
  * @property actualResult The result that was returned by the student method.
  */
-open class TestCaseFailure(
+public open class TestCaseFailure(
     methodName: String,
-    val givenParameters: Array<out Any?>,
-    val expectedResult: Any?,
-    val actualResult: Any?
+    public val givenParameters: Array<out Any?>,
+    public val expectedResult: Any?,
+    public val actualResult: Any?
 ) : Result(methodName) {
     override fun toString(): String {
         return "Failure! <$methodName(${givenParameters.joinToString(", ")})> should output <$expectedResult> but instead outputs <$actualResult>."
@@ -135,7 +137,7 @@ open class TestCaseFailure(
 /**
  * Represents a method that failed a test case due to a timeout.
  */
-class InfiniteLoopFailure(methodName: String, givenParameters: Array<out Any?>, expectedResult: Any?) :
+public class InfiniteLoopFailure(methodName: String, givenParameters: Array<out Any?>, expectedResult: Any?) :
     TestCaseFailure(methodName, givenParameters, expectedResult, null) {
     override fun toString(): String {
         return "Failure! <$methodName(${givenParameters.joinToString(",")})> should output <$expectedResult> but took too long -- is there an infinite loop?"
@@ -148,7 +150,7 @@ class InfiniteLoopFailure(methodName: String, givenParameters: Array<out Any?>, 
 /**
  * Represents a failure that wasn't due to student code.
  */
-class Error(methodName: String) : Result(methodName) {
+public class Error(methodName: String) : Result(methodName) {
     override fun toString(): String {
         return "There was an error (not your fault) trying to deal with <$methodName>..."
     }

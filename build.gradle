@@ -6,15 +6,17 @@ buildscript {
 
 plugins {
     id 'java'
-    id "org.jetbrains.kotlin.jvm" version "1.2.21"
+    id 'org.jetbrains.kotlin.jvm' version '1.2.21'
     id 'maven'
-    id 'org.ysb33r.doxygen' version '0.4'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '2.0.2'
     id 'org.jetbrains.dokka' version '0.9.15'
+    id "com.jfrog.bintray" version "1.7.3"
 }
 
 
 group 'pw.jonak'
-version '0.1-SNAPSHOT'
+version '0.2-FINAL'
 
 sourceCompatibility = 1.8
 
@@ -42,7 +44,20 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
+dokka {
+    outputFormat = 'html'
+    jdkVersion = 8
+    // includeNonPublic = true // Not working...
+    impliedPlatforms = ["JVM"]
+}
+
+task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
+    outputFormat = 'javadoc'
+    outputDirectory = "$buildDir/dokkadoc"
+    inputs.dir 'src/kotlin'
+}
+
+task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
@@ -56,35 +71,26 @@ artifacts {
     archives javadocJar
 }
 
-doxygen {
-    project_brief 'A small autograder to help students learn.'
-    source new File(projectDir, 'src')
-    file_pattern '.java .kt'
-
-    generate_html true
-    generate_latex true
-    paper_type 'letter'
-    generate_man true
-
-    optimize_output_java true
-    extract_all true
-    extract_private true
-    extract_package true
-    extract_static true
-    extract_local_methods true
-    extract_anon_nspaces true
-    source_browser true
-    referenced_by_relation true
-    references_relation true
-
-    have_dot true
-    call_graph true
-    caller_graph true
+bintray {
+    user = getSecret('BINTRAY_USER')
+    key = getSecret('BINTRAY_API_KEY')
+    pkg {
+        repo = 'code-practice-helper'
+        name = 'code-practice-helper'
+        licenses = ['GPL-3.0']
+        vcsUrl = 'https://github.com/jdkula/code-practice-helper.git'
+        configurations = ['archives']
+        version {
+            name = "v$project.version"
+            desc = "v$project.version"
+            released = new Date()
+            vcsTag = "v$project.version"
+        }
+    }
 }
 
-dokka {
-    outputFormat = 'html'
-    jdkVersion = 8
-    //includeNonPublic = true
-    impliedPlatforms = ["JVM"]
+static def getSecret(String key) {
+    Properties props = new Properties()
+    props.load(new FileInputStream(new File('secrets.properties')))
+    return props[key]
 }

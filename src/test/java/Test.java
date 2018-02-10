@@ -1,7 +1,7 @@
 import junit.framework.TestCase;
-import pw.jonak.methodtest.MethodTest;
-import pw.jonak.methodtest.Result;
-import pw.jonak.methodtest.Success;
+import pw.jonak.practicehelper.MethodTest;
+import pw.jonak.practicehelper.Result;
+import pw.jonak.practicehelper.Success;
 
 import java.util.Random;
 

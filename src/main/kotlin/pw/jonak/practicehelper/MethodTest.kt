@@ -1,4 +1,4 @@
-package pw.jonak.methodtest
+package pw.jonak.practicehelper
 
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
